@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>דוח ניחושים — מונדיאל 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Heebo:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch:#0A2A20;
+    --pitch-2:#0E362A;
+    --card:#10402F;
+    --line:rgba(242,247,243,.14);
+    --line-soft:rgba(242,247,243,.08);
+    --chalk:#F2F7F3;
+    --muted:#9CBBAD;
+    --gold:#F0C24B;
+    --grass:#6FD095;
+    --miss:#E4705B;
+    --pending:#6E8A7E;
+    --radius:14px;
+    --mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Heebo',sans-serif;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(111,208,149,.10), transparent 60%),
+      repeating-linear-gradient(180deg, var(--pitch) 0 120px, var(--pitch-2) 120px 240px);
+    color:var(--chalk);
+    min-height:100vh;
+    padding:24px 16px 80px;
+  }
+  .wrap{max-width:1060px;margin:0 auto}
+
+  /* ---------- header ---------- */
+  .masthead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .masthead h1{font-family:'Secular One',sans-serif;font-size:clamp(26px,4.5vw,42px);letter-spacing:.5px}
+  .masthead .sub{color:var(--muted);font-size:14px}
+  .rule{height:2px;background:linear-gradient(90deg,var(--gold),transparent 70%);margin:10px 0 22px;border-radius:2px}
+
+  /* ---------- main nav ---------- */
+  .mainnav{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+  .mainnav button{
+    padding:11px 22px;border-radius:999px;border:1px solid var(--line);background:transparent;
+    color:var(--muted);font-family:'Heebo',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:.15s
+  }
+  .mainnav button:hover{color:var(--chalk);border-color:var(--chalk)}
+  .mainnav button.active{background:rgba(240,194,75,.12);border-color:var(--gold);color:var(--gold);font-weight:700}
+
+  /* ---------- input panel ---------- */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:26px}
+  .panel h2{font-family:'Secular One',sans-serif;font-size:22px;margin-bottom:4px}
+  .panel .desc{color:var(--muted);font-size:14px;margin-bottom:14px;line-height:1.6}
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tab{flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--muted);font-family:'Heebo',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:.15s}
+  .tab.active{background:rgba(240,194,75,.12);border-color:var(--gold);color:var(--gold)}
+  .tab:focus-visible,button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  textarea{width:100%;min-height:150px;background:#082018;border:1px solid var(--line);border-radius:10px;color:var(--chalk);font-family:var(--mono);font-size:12px;padding:12px;resize:vertical;direction:ltr}
+  .row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .field{flex:1;min-width:220px;background:#082018;border:1px solid var(--line);border-radius:10px;color:var(--chalk);font-family:var(--mono);font-size:14px;padding:12px;direction:ltr}
+  .field.rtl{direction:rtl;font-family:'Heebo',sans-serif}
+  .btn{padding:12px 26px;border:none;border-radius:10px;background:var(--gold);color:#3A2C05;font-family:'Heebo',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:.15s}
+  .btn:hover{filter:brightness(1.08)}
+  .btn[disabled]{opacity:.6;cursor:wait}
+  .btn.sm{padding:7px 16px;font-size:13px;border-radius:8px;white-space:nowrap}
+  .btn.ghost{background:transparent;border:1px solid var(--gold);color:var(--gold)}
+  .hint{color:var(--muted);font-size:13px;margin-top:10px;line-height:1.6}
+  .error{display:none;margin-top:12px;padding:12px 14px;border-radius:10px;background:rgba(228,112,91,.12);border:1px solid rgba(228,112,91,.5);color:#F4B4A7;font-size:14px;line-height:1.7}
+  .loading-note{display:none;color:var(--muted);font-size:14px;margin-top:12px}
+
+  /* ---------- shared table look ---------- */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  thead th{font-size:12px;font-weight:500;color:var(--muted);text-align:right;padding:8px 14px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+  tbody td{padding:10px 14px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}
+  .table-scroll{overflow-x:auto}
+  tbody tr.clickable{cursor:pointer;transition:background .12s}
+  tbody tr.clickable:hover{background:rgba(240,194,75,.05)}
+
+  /* ---------- leaderboard / friends ---------- */
+  .rank{font-family:var(--mono);font-weight:600;color:var(--muted);text-align:center;width:44px}
+  .rank.medal{font-size:17px}
+  .pcell{display:flex;align-items:center;gap:10px;min-width:170px}
+  .avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 1px var(--line)}
+  .avatar.ph{display:inline-flex;align-items:center;justify-content:center;background:rgba(240,194,75,.14);color:var(--gold);font-weight:700;font-size:15px}
+  .pname{font-weight:500;line-height:1.3}
+  .pname .sub2{display:block;font-size:11px;color:var(--muted);font-family:var(--mono);direction:ltr;text-align:right}
+  .ptscell{font-family:var(--mono);font-weight:600;font-size:16px;color:var(--gold);white-space:nowrap}
+  .champcell{display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .scorcell{color:var(--muted);font-size:13px;white-space:nowrap}
+  .fidchips{display:flex;gap:5px;flex-wrap:wrap}
+  .fidchip{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line-soft);border-radius:6px;padding:2px 7px;white-space:nowrap}
+  .fidchip b{color:var(--chalk);font-weight:600}
+  .tag-friend{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(111,208,149,.14);color:var(--grass);border:1px solid rgba(111,208,149,.45);margin-inline-start:8px;vertical-align:2px}
+
+  /* ---------- stats ---------- */
+  .stats{display:none;margin-bottom:26px}
+  .stats h2, .fixtures h2, .secttl{font-family:'Secular One',sans-serif;font-size:22px;margin-bottom:14px}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;text-align:center}
+  .stat .num{font-family:var(--mono);font-weight:600;font-size:30px;line-height:1.1}
+  .stat .num.small{font-size:20px;font-family:'Heebo',sans-serif}
+  .stat .pct{font-family:var(--mono);font-size:13px;margin-top:2px}
+  .stat .lbl{font-size:13px;color:var(--muted);margin-top:6px}
+  .stat.exact .num,.stat.exact .pct{color:var(--gold)}
+  .stat.dir .num,.stat.dir .pct{color:var(--grass)}
+  .stat.miss .num,.stat.miss .pct{color:var(--miss)}
+  .bar{display:flex;height:14px;border-radius:999px;overflow:hidden;border:1px solid var(--line);margin-bottom:14px}
+  .bar div{height:100%}
+  .bar .b-exact{background:var(--gold)}
+  .bar .b-dir{background:var(--grass)}
+  .bar .b-miss{background:var(--miss)}
+  /* signature: form strip */
+  .formstrip-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .formstrip-card .k{font-size:13px;color:var(--muted);margin-bottom:10px}
+  .formstrip{display:flex;flex-wrap:wrap;gap:5px;direction:rtl}
+  .tick{width:14px;height:22px;border-radius:3px;background:var(--pending);position:relative;cursor:default;transition:transform .1s}
+  .tick:hover{transform:scaleY(1.2)}
+  .tick.exact{background:var(--gold)}
+  .tick.dir{background:var(--grass)}
+  .tick.miss{background:var(--miss);opacity:.75}
+  .legend{display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+  /* ---------- champion distribution bars ---------- */
+  .champbars{margin-bottom:16px}
+  .champbars .k{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .champrow{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  .champrow .clabel{display:flex;align-items:center;gap:7px;width:150px;flex:none;font-size:13px}
+  .champrow .ctrack{flex:1;height:18px;background:rgba(8,32,24,.6);border-radius:4px;overflow:hidden}
+  .champrow .cfill{display:block;height:100%;background:var(--gold);border-radius:4px 0 0 4px;min-width:2px;transition:width .3s}
+  .champrow .cnum{font-family:var(--mono);font-size:13px;color:var(--chalk);width:76px;flex:none;white-space:nowrap}
+  .champrow .cnum .pc{color:var(--muted);font-size:11px}
+  .champrow:hover .cfill{filter:brightness(1.15)}
+
+  /* ---------- player card ---------- */
+  .player{display:none;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:26px}
+  .player-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .player-name{font-family:'Secular One',sans-serif;font-size:clamp(24px,4vw,34px);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .player-name .avatar{width:44px;height:44px}
+  .player-id{font-family:var(--mono);font-size:12px;color:var(--muted);direction:ltr;display:inline-block}
+  .player-src{font-size:12px;color:var(--muted);margin-top:4px}
+  .total-points{text-align:center}
+  .total-points .num{font-family:var(--mono);font-weight:600;font-size:clamp(34px,5vw,48px);color:var(--gold);line-height:1}
+  .total-points .lbl{font-size:13px;color:var(--muted)}
+  .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:18px}
+  .meta-item{background:rgba(8,32,24,.6);border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px}
+  .meta-item .k{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .meta-item .v{font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px}
+  .meta-item .v .mono{font-family:var(--mono);font-size:14px}
+  .fixchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .fixchip{border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--muted)}
+  .fixchip b{color:var(--chalk);font-family:var(--mono);font-weight:600;margin-inline-start:6px}
+
+  /* ---------- fixtures ---------- */
+  .fixtures{display:none}
+  details.fixture{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
+  details.fixture summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  details.fixture summary::-webkit-details-marker{display:none}
+  .fix-title{font-family:'Secular One',sans-serif;font-size:18px}
+  .fix-meta{display:flex;gap:14px;align-items:center;color:var(--muted);font-size:13px;flex-wrap:wrap}
+  .fix-meta b{color:var(--gold);font-family:var(--mono);font-weight:600}
+  .fix-mini{display:flex;gap:3px}
+  .fix-mini .tick{width:8px;height:14px}
+  .teams{display:flex;align-items:center;gap:8px;min-width:230px}
+  .teams .t{display:flex;align-items:center;gap:6px;flex:1}
+  .teams .t.left{justify-content:flex-start}
+  .teams .t.right{justify-content:flex-end}
+  .teams .vs{color:var(--muted);font-size:11px}
+  .flag{width:26px;height:auto;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+  .flag.sm{width:20px}
+  .score{font-family:var(--mono);font-weight:600;font-size:14px;white-space:nowrap;text-align:center;line-height:1.5}
+  .score .side{display:inline-flex;align-items:center;gap:5px}
+  .score .side .fl{width:18px;height:auto;border-radius:2px}
+  .score .n{font-size:16px}
+  .score .dash{color:var(--muted);margin:0 8px;font-weight:400}
+  .score.real .n{color:var(--chalk)}
+  .score.guess{color:var(--muted)}
+  .score.guess .n{color:var(--chalk)}
+  .score.pending{color:var(--pending);font-size:13px;font-weight:500}
+  .badge{display:inline-block;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+  .badge.exact{background:rgba(240,194,75,.16);color:var(--gold);border:1px solid rgba(240,194,75,.5)}
+  .badge.dir{background:rgba(111,208,149,.14);color:var(--grass);border:1px solid rgba(111,208,149,.45)}
+  .badge.miss{background:rgba(228,112,91,.12);color:var(--miss);border:1px solid rgba(228,112,91,.45)}
+  .badge.pending{background:rgba(110,138,126,.15);color:var(--pending);border:1px solid rgba(110,138,126,.4)}
+  .pts{font-family:var(--mono);font-weight:600;text-align:center}
+  .pts.zero{color:var(--muted)}
+  .gdate{color:var(--muted);font-size:12px;white-space:nowrap;font-family:var(--mono)}
+
+  @media (max-width:640px){
+    thead th:nth-child(5), tbody td:nth-child(5){display:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <h1>דוח ניחושים · מונדיאל 2026</h1>
+    <span class="sub">ניתוח פגיעות, כיוונים והחטאות בליגת הניחושים</span>
+  </header>
+  <div class="rule"></div>
+
+  <!-- ============ MAIN NAV ============ -->
+  <nav class="mainnav" role="tablist" aria-label="מודולים">
+    <button data-view="single" class="active">🔍 שחקן בודד</button>
+    <button data-view="friends">👥 הליגה שלי</button>
+    <button data-view="top">🏆 דשבורד טופ 50</button>
+  </nav>
+
+  <!-- ============ VIEW: SINGLE ============ -->
+  <section class="panel view" id="view-single">
+    <div class="tabs" role="tablist">
+      <button class="tab active" id="tabJson" role="tab" aria-selected="true">הדבקת JSON</button>
+      <button class="tab" id="tabApi" role="tab" aria-selected="false">משיכה לפי auid</button>
+    </div>
+
+    <div id="paneJson">
+      <textarea id="jsonInput" placeholder='הדבק כאן את ה-JSON המלא של המשתמש…' spellcheck="false"></textarea>
+      <div class="row">
+        <button class="btn" id="btnParse">נתח נתונים</button>
+      </div>
+    </div>
+
+    <div id="paneApi" style="display:none">
+      <div class="row" style="margin-top:0">
+        <input class="field" id="auidInput" placeholder="auid — לדוגמה: 6a157d4630cb12a8d60ec895">
+        <button class="btn" id="btnFetch">משוך מהשרת</button>
+      </div>
+      <p class="hint">
+        הבקשה נשלחת ב-POST אל
+        <span dir="ltr" style="font-family:var(--mono);font-size:12px">hevre.sport5.co.il/server/data.php?type=appUserGetUserById</span>.
+      </p>
+    </div>
+
+    <div class="error" id="errBox"></div>
+  </section>
+
+  <!-- ============ VIEW: FRIENDS ============ -->
+  <section class="view" id="view-friends" style="display:none">
+    <div class="panel">
+      <h2>הליגה שלי</h2>
+      <p class="desc">כל חברי הליגה מתוך <span dir="ltr" style="font-family:var(--mono);font-size:12px">listofmemebers.js</span>, ממוינים לפי ניקוד. לחיצה על שחקן מושכת את הניחושים שלו מהשרת (getFriendGuesses) ומציגה דוח מלא.</p>
+      <div class="row" style="margin-top:0">
+        <input class="field rtl" id="friendSearch" placeholder="חיפוש שחקן לפי שם…">
+      </div>
+      <div class="error" id="friendsErr"></div>
+      <div class="loading-note" id="friendsLoading">מושך ניחושים מהשרת…</div>
+      <div class="table-scroll" style="margin-top:14px">
+        <table id="friendsTable">
+          <thead><tr>
+            <th style="text-align:center">#</th><th>שחקן</th><th>נק׳</th><th>נק׳ לפי מחזור</th><th>אלופה</th><th>מלך שערים</th><th></th>
+          </tr></thead>
+          <tbody id="friendsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VIEW: TOP USERS ============ -->
+  <section class="view" id="view-top" style="display:none">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2>דשבורד המובילים</h2>
+          <p class="desc">הטבלה הארצית — החזקים ביותר במשחק (getTopUsers). לחיצה על שחקן מושכת את כל הניחושים שלו (appUserGetUserById) ומציגה דוח מלא.</p>
+        </div>
+        <button class="btn ghost sm" id="btnTopRefresh">↻ רענון</button>
+      </div>
+      <div class="error" id="topErr"></div>
+      <div class="loading-note" id="topLoading">טוען את טבלת המובילים…</div>
+
+      <div class="stat-grid" id="topStats" style="margin-top:14px"></div>
+
+      <div class="formstrip-card champbars" id="champBarsCard" style="display:none">
+        <div class="k">ניחוש האלופה בקרב המובילים — התפלגות</div>
+        <div id="champBars"></div>
+      </div>
+
+      <div class="table-scroll">
+        <table id="topTable">
+          <thead><tr>
+            <th style="text-align:center">#</th><th>שחקן</th><th>נק׳</th><th>אלופה</th><th>נק׳ מלך שערים</th><th></th>
+          </tr></thead>
+          <tbody id="topBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PLAYER META (shared output) ============ -->
+  <section class="player" id="playerCard">
+    <div class="player-top">
+      <div>
+        <div class="player-name" id="pName"></div>
+        <span class="player-id" id="pId"></span>
+        <div class="player-src" id="pSrc"></div>
+      </div>
+      <div class="total-points">
+        <div class="num" id="pPoints"></div>
+        <div class="lbl">סה״כ נקודות</div>
+      </div>
+    </div>
+    <div class="meta-grid" id="metaGrid"></div>
+    <div class="fixchips" id="fixChips"></div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section class="stats" id="statsSec">
+    <h2>סטטיסטיקת דיוק</h2>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="bar" id="ratioBar" title="יחס בול / כיוון / החטאה"></div>
+    <div class="formstrip-card">
+      <div class="k">פס פגיעות — כל משחק לפי סדר כרונולוגי (מימין לשמאל)</div>
+      <div class="formstrip" id="formStrip"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--gold)"></i> בול (תוצאה מדויקת)</span>
+        <span><i class="dot" style="background:var(--grass)"></i> כיוון (מגמה נכונה)</span>
+        <span><i class="dot" style="background:var(--miss)"></i> החטאה</span>
+        <span><i class="dot" style="background:var(--pending)"></i> טרם שוחק / לא נוחש</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FIXTURES ============ -->
+  <section class="fixtures" id="fixturesSec">
+    <h2>ניחושים לפי מחזור</h2>
+    <div id="fixturesList"></div>
+  </section>
+
+</div>
+
+<script src="listofmemebers.js"></script>
+<script>
+/* ================= flags: Hebrew team name -> ISO code (flagcdn.com) ================= */
+const FLAG_MAP = {
+  'מקסיקו':'mx','דרום אפריקה':'za','דרום קוריאה':'kr',"צ'כיה":'cz','קנדה':'ca',
+  'בוסניה הרצגובינה':'ba','ארצות הברית':'us','פראגוואי':'py','קטאר':'qa','שוויץ':'ch',
+  'ברזיל':'br','מרוקו':'ma','האיטי':'ht','סקוטלנד':'gb-sct','אוסטרליה':'au',
+  'טורקיה':'tr','גרמניה':'de','קורסאו':'cw','הולנד':'nl','יפן':'jp',
+  'חוף השנהב':'ci','אקוודור':'ec','שבדיה':'se','טוניסיה':'tn','ספרד':'es',
+  'קייפ ורדה':'cv','כף ורדה':'cv','בלגיה':'be','מצרים':'eg','ערב הסעודית':'sa',
+  'אורוגוואי':'uy','איראן':'ir','ניו זילנד':'nz','צרפת':'fr','סנגל':'sn',
+  'עיראק':'iq','נורווגיה':'no','ארגנטינה':'ar',"אלג'יריה":'dz','אוסטריה':'at',
+  'ירדן':'jo','פורטוגל':'pt','קונגו הדמוקרטית':'cd','אנגליה':'gb-eng','קרואטיה':'hr',
+  'גאנה':'gh','פנמה':'pa','אוזבקיסטן':'uz','קולומביה':'co','איטליה':'it',
+  'אוקראינה':'ua','פולין':'pl','דנמרק':'dk','ניגריה':'ng','קמרון':'cm',
+  'צ׳ילה':'cl',"צ'ילה":'cl','פרו':'pe','ונצואלה':'ve','קוסטה ריקה':'cr',
+  'הונדורס':'hn','ג׳מייקה':'jm',"ג'מייקה":'jm','סרביה':'rs','סלובקיה':'sk',
+  'סלובניה':'si','הונגריה':'hu','רומניה':'ro','יוון':'gr','ויילס':'gb-wls',
+  'אירלנד':'ie','פינלנד':'fi','רוסיה':'ru','ישראל':'il'
+};
+
+function flagHtml(name, cls){
+  const code = FLAG_MAP[(name||'').trim()];
+  const c = cls || 'flag';
+  if(!code) return `<span class="${c}" style="display:inline-block;width:26px;height:18px;background:var(--pending);text-align:center;font-size:10px;line-height:18px">?</span>`;
+  return `<img class="${c}" loading="lazy" src="https://flagcdn.com/w40/${code}.png" srcset="https://flagcdn.com/w80/${code}.png 2x" alt="${name}" onerror="this.style.display='none'">`;
+}
+
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n; };
+const fmtPts = p => (p % 1 === 0 ? p.toString() : p.toFixed(1));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmtDate = ms => {
+  if(!ms) return '';
+  const d = new Date(ms);
+  return d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'}) + ' ' +
+         d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+};
+
+function avatarHtml(name, image){
+  if(image) return `<img class="avatar" src="${esc(image)}" alt="" onerror="this.outerHTML='<span class=&quot;avatar ph&quot;>${esc((name||'?').trim()[0]||'?')}</span>'">`;
+  return `<span class="avatar ph">${esc((name||'?').trim()[0]||'?')}</span>`;
+}
+
+function classify(game){
+  // exact / dir / miss / pending — based on typeOfGuess + presence of a result
+  const hasResult = num(game.result1) !== null && num(game.result2) !== null;
+  const t = game.typeOfGuess || '';
+  if(t === 'exact') return 'exact';
+  if(t === 'gettingthere') return 'dir';
+  if(t === 'miss') return 'miss';
+  return hasResult ? 'miss' : 'pending';
+}
+const BADGE_TXT = {exact:'בול', dir:'כיוון', miss:'החטאה', pending:'טרם'};
+
+/* ================= API ================= */
+/* content-type text/plain => בקשת CORS פשוטה (בלי preflight). השרת מחזיר Access-Control-Allow-Origin: * */
+const API_BASE = 'https://hevre.sport5.co.il/server/data.php?type=';
+async function api(type, body){
+  const res = await fetch(API_BASE + type, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=UTF-8'},
+    body: JSON.stringify(body || {})
+  });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+/* ================= main nav ================= */
+function showView(name){
+  const b = document.querySelector(`.mainnav button[data-view="${name}"]`);
+  if(!b) return;
+  document.querySelectorAll('.mainnav button').forEach(x=>x.classList.toggle('active', x===b));
+  document.querySelectorAll('.view').forEach(v=>v.style.display='none');
+  $('view-'+name).style.display='block';
+  if(name==='top' && !topCache) loadTop();
+  if(name==='friends' && !friendsRendered) renderFriends();
+}
+document.querySelectorAll('.mainnav button').forEach(b=>{
+  b.onclick = () => { location.hash = b.dataset.view; showView(b.dataset.view); };
+});
+window.addEventListener('DOMContentLoaded', ()=>{
+  const h = location.hash.replace('#','');
+  if(h==='friends'||h==='top') showView(h);
+});
+
+/* ================= tabs (single view) ================= */
+$('tabJson').onclick = () => switchTab(true);
+$('tabApi').onclick  = () => switchTab(false);
+function switchTab(json){
+  $('tabJson').classList.toggle('active', json);
+  $('tabApi').classList.toggle('active', !json);
+  $('tabJson').setAttribute('aria-selected', json);
+  $('tabApi').setAttribute('aria-selected', !json);
+  $('paneJson').style.display = json ? '' : 'none';
+  $('paneApi').style.display  = json ? 'none' : '';
+  hideError('errBox');
+}
+
+/* ================= errors ================= */
+function showError(id, html){ const e=$(id); e.innerHTML=html; e.style.display='block'; }
+function hideError(id){ $(id).style.display='none'; }
+
+/* ================= single view actions ================= */
+$('btnParse').onclick = () => {
+  hideError('errBox');
+  const raw = $('jsonInput').value.trim();
+  if(!raw){ showError('errBox','לא הודבק תוכן. הדבק JSON מלא של משתמש ונסה שוב.'); return; }
+  try{
+    const data = JSON.parse(raw);
+    render(data, 'מקור: JSON שהודבק ידנית');
+  }catch(e){
+    showError('errBox','ה-JSON אינו תקין: <span dir="ltr" style="font-family:var(--mono);font-size:12px">'+esc(e.message)+'</span>');
+  }
+};
+
+$('btnFetch').onclick = async () => {
+  hideError('errBox');
+  const auid = $('auidInput').value.trim();
+  if(!auid){ showError('errBox','יש להזין auid.'); return; }
+  const btn = $('btnFetch');
+  btn.disabled = true; btn.textContent = 'מושך…';
+  try{
+    const data = await api('appUserGetUserById', {auid});
+    if(!data || (!data.guesses && !data.name)) throw new Error('התקבלה תשובה ריקה או לא מוכרת מהשרת');
+    render(data, 'מקור: appUserGetUserById');
+  }catch(e){
+    showError('errBox','המשיכה מהשרת נכשלה — <span dir="ltr" style="font-family:var(--mono);font-size:12px">'+esc(e.message)+'</span>');
+  }finally{
+    btn.disabled = false; btn.textContent = 'משוך מהשרת';
+  }
+};
+
+/* ================= friends module ================= */
+const members = (typeof myMembers !== 'undefined' && Array.isArray(myMembers))
+  ? myMembers.slice().sort((a,b)=>(b.points||0)-(a.points||0))
+  : null;
+const memberIds = new Set((members||[]).map(m=>m._id));
+let friendsRendered = false;
+
+function fidChipsHtml(m){
+  const chips = [];
+  for(let i=0;i<=6;i++){
+    const p = m['fid-'+i+'-points'];
+    if(p != null) chips.push(`<span class="fidchip">מחז׳ ${i+1} <b>${fmtPts(p)}</b></span>`);
+  }
+  return `<div class="fidchips">${chips.join('')}</div>`;
+}
+
+function renderFriends(){
+  friendsRendered = true;
+  if(!members){
+    showError('friendsErr','הקובץ <span dir="ltr" style="font-family:var(--mono)">listofmemebers.js</span> לא נטען. ודא שהוא נמצא באותה תיקייה כמו קובץ ה-HTML ושהוא מגדיר משתנה בשם <span dir="ltr" style="font-family:var(--mono)">myMembers</span>.');
+    return;
+  }
+  const q = ($('friendSearch').value||'').trim();
+  const list = q ? members.filter(m=>(m.name||'').includes(q)) : members;
+  $('friendsBody').innerHTML = list.map(m=>{
+    const rank = members.indexOf(m)+1;
+    const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+    return `<tr class="clickable" data-id="${esc(m._id)}" title="לחץ להצגת הניחושים של ${esc(m.name)}">
+      <td class="rank ${rank<=3?'medal':''}">${medal}</td>
+      <td><div class="pcell">${avatarHtml(m.name, m.image)}<span class="pname">${esc(m.name)}</span></div></td>
+      <td class="ptscell">${fmtPts(m.points||0)}</td>
+      <td>${fidChipsHtml(m)}</td>
+      <td><div class="champcell">${m.champion?flagHtml(m.champion.name,'flag sm')+' '+esc(m.champion.name):'<span style="color:var(--muted)">—</span>'}</div></td>
+      <td class="scorcell">${m.scorer?esc(m.scorer.name):'—'}</td>
+      <td><button class="btn sm" data-load="${esc(m._id)}">ניחושים</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7" style="color:var(--muted)">לא נמצאו שחקנים תואמים.</td></tr>`;
+}
+
+$('friendSearch').oninput = renderFriends;
+
+$('friendsBody').onclick = e => {
+  const row = e.target.closest('tr[data-id]');
+  if(row) loadFriend(row.dataset.id);
+};
+
+async function loadFriend(id){
+  hideError('friendsErr');
+  const m = (members||[]).find(x=>x._id===id);
+  if(!m) return;
+  const btn = document.querySelector(`#friendsBody button[data-load="${id}"]`);
+  if(btn){ btn.disabled = true; btn.textContent = 'מושך…'; }
+  $('friendsLoading').style.display = 'block';
+  try{
+    const guesses = await api('getFriendGuesses', {user:id, auid:id});
+    if(!Array.isArray(guesses)) throw new Error('תשובה לא צפויה מהשרת');
+    render({...m, guesses}, 'מקור: getFriendGuesses · חבר ליגה');
+  }catch(e){
+    showError('friendsErr','משיכת הניחושים נכשלה — <span dir="ltr" style="font-family:var(--mono);font-size:12px">'+esc(e.message)+'</span>');
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'ניחושים'; }
+    $('friendsLoading').style.display = 'none';
+  }
+}
+
+/* ================= top users module ================= */
+let topCache = null;
+
+$('btnTopRefresh').onclick = () => loadTop(true);
+
+async function loadTop(force){
+  hideError('topErr');
+  if(topCache && !force){ renderTop(topCache); return; }
+  $('topLoading').style.display = 'block';
+  $('btnTopRefresh').disabled = true;
+  try{
+    const users = await api('getTopUsers', {});
+    if(!Array.isArray(users)) throw new Error('תשובה לא צפויה מהשרת');
+    topCache = users;
+    renderTop(users);
+  }catch(e){
+    showError('topErr','טעינת המובילים נכשלה — <span dir="ltr" style="font-family:var(--mono);font-size:12px">'+esc(e.message)+'</span>');
+  }finally{
+    $('topLoading').style.display = 'none';
+    $('btnTopRefresh').disabled = false;
+  }
+}
+
+function renderTop(users){
+  /* --- summary stat tiles --- */
+  const pts = users.map(u=>u.points||0);
+  const avg = pts.length ? pts.reduce((a,b)=>a+b,0)/pts.length : 0;
+  const friendsInTop = users.filter(u=>memberIds.has(u.id)).length;
+
+  /* champion distribution */
+  const dist = {};
+  users.forEach(u=>{ const n = u.champion?.name || 'ללא בחירה'; dist[n]=(dist[n]||0)+1; });
+  const distArr = Object.entries(dist).sort((a,b)=>b[1]-a[1]);
+  const topChamp = distArr[0];
+
+  $('topStats').innerHTML = `
+    <div class="stat"><div class="num">${users.length}</div><div class="lbl">שחקנים בטבלת המובילים</div></div>
+    <div class="stat exact"><div class="num">${fmtPts(pts[0]||0)}</div><div class="lbl">הניקוד המוביל · ${esc(users[0]?.name||'')}</div></div>
+    <div class="stat"><div class="num">${avg.toFixed(1)}</div><div class="lbl">ממוצע נקודות במובילים</div></div>
+    <div class="stat"><div class="num small" style="display:flex;align-items:center;justify-content:center;gap:8px">${topChamp?flagHtml(topChamp[0],'flag sm')+' '+esc(topChamp[0]):'—'}</div><div class="lbl">האלופה הפופולרית (${topChamp?topChamp[1]:0} בחירות)</div></div>
+    <div class="stat dir"><div class="num">${friendsInTop}</div><div class="lbl">חברי הליגה שלי בטופ</div></div>
+  `;
+
+  /* champion bars — single-hue magnitude, identity carried by flag+label */
+  const maxCnt = distArr.length ? distArr[0][1] : 1;
+  $('champBars').innerHTML = distArr.map(([name,cnt])=>{
+    const pc = Math.round(cnt/users.length*100);
+    return `<div class="champrow" title="${esc(name)} — ${cnt} שחקנים (${pc}%)">
+      <span class="clabel">${flagHtml(name,'flag sm')} ${esc(name)}</span>
+      <span class="ctrack"><span class="cfill" style="width:${cnt/maxCnt*100}%"></span></span>
+      <span class="cnum">${cnt} <span class="pc">· ${pc}%</span></span>
+    </div>`;
+  }).join('');
+  $('champBarsCard').style.display = 'block';
+
+  /* leaderboard */
+  $('topBody').innerHTML = users.map((u,i)=>{
+    const rank = i+1;
+    const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+    const isFriend = memberIds.has(u.id);
+    return `<tr class="clickable" data-id="${esc(u.id)}" title="לחץ להצגת הניחושים של ${esc(u.name)}">
+      <td class="rank ${rank<=3?'medal':''}">${medal}</td>
+      <td><div class="pcell">${avatarHtml(u.name, u.image)}<span class="pname">${esc(u.name)}${isFriend?'<span class="tag-friend">מהליגה שלי</span>':''}</span></div></td>
+      <td class="ptscell">${fmtPts(u.points||0)}</td>
+      <td><div class="champcell">${u.champion?flagHtml(u.champion.name,'flag sm')+' '+esc(u.champion.name):'<span style="color:var(--muted)">—</span>'}</div></td>
+      <td class="pts" style="text-align:right">${u.pointsFromScrorer ?? 0}</td>
+      <td><button class="btn sm" data-load="${esc(u.id)}">ניחושים</button></td>
+    </tr>`;
+  }).join('');
+}
+
+$('topBody').onclick = e => {
+  const row = e.target.closest('tr[data-id]');
+  if(row) loadTopUser(row.dataset.id);
+};
+
+async function loadTopUser(id){
+  hideError('topErr');
+  const btn = document.querySelector(`#topBody button[data-load="${id}"]`);
+  if(btn){ btn.disabled = true; btn.textContent = 'מושך…'; }
+  $('topLoading').style.display = 'block';
+  try{
+    const data = await api('appUserGetUserById', {auid:id});
+    if(!data || (!data.guesses && !data.name)) throw new Error('התקבלה תשובה ריקה מהשרת');
+    const rank = (topCache||[]).findIndex(u=>u.id===id)+1;
+    render(data, 'מקור: appUserGetUserById · מקום '+rank+' בטבלת המובילים');
+  }catch(e){
+    showError('topErr','משיכת הניחושים נכשלה — <span dir="ltr" style="font-family:var(--mono);font-size:12px">'+esc(e.message)+'</span>');
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'ניחושים'; }
+    $('topLoading').style.display = 'none';
+  }
+}
+
+/* ================= render (shared player report) ================= */
+function render(data, sourceLabel){
+  /* ---- player meta ---- */
+  $('pName').innerHTML = avatarHtml(data.name, data.image) + '<span>' + esc(data.name || 'שחקן ללא שם') + '</span>';
+  $('pId').textContent = 'ID: ' + (data._id || data.id || '—');
+  $('pSrc').textContent = sourceLabel || '';
+  $('pPoints').textContent = data.points ?? '—';
+
+  const meta = [];
+  if(data.champion?.name)
+    meta.push({k:'ניחוש אלופה', v:`${flagHtml(data.champion.name)} ${esc(data.champion.name)}`});
+  if(data.scorer?.name)
+    meta.push({k:'מלך שערים', v:`${esc(data.scorer.name)} <span style="color:var(--muted);font-size:12px">(${esc(data.scorer.teamName||'')})</span>`});
+  if(data.pointsFromGuesses != null)
+    meta.push({k:'נקודות מניחושי משחקים', v:`<span class="mono">${data.pointsFromGuesses}</span>`});
+  if(data.pointsFromScrorer != null)
+    meta.push({k:'נקודות ממלך השערים', v:`<span class="mono">${data.pointsFromScrorer}</span>`});
+  if(data.pointsFromAssister != null)
+    meta.push({k:'נקודות ממלך הבישולים', v:`<span class="mono">${data.pointsFromAssister}</span>`});
+  if(data.currentStage)
+    meta.push({k:'שלב נוכחי', v:`<span class="mono" dir="ltr">${esc(data.currentStage)}</span>`});
+  $('metaGrid').innerHTML = meta.map(m=>`<div class="meta-item"><div class="k">${m.k}</div><div class="v">${m.v}</div></div>`).join('');
+
+  /* per-fixture points chips (fid-N-points) */
+  const fixtures = Array.isArray(data.guesses) ? data.guesses : [];
+  $('fixChips').innerHTML = fixtures.map(f=>{
+    const p = data['fid-'+f.fid+'-points'];
+    return p==null ? '' : `<span class="fixchip">${esc(f.name)}<b>${p}</b></span>`;
+  }).join('');
+
+  /* ---- collect all games ---- */
+  const all = [];
+  fixtures.forEach(f => (f.games||[]).forEach(g => all.push({f, g, cls: classify(g)})));
+  all.sort((a,b)=>(a.g.beggining||0)-(b.g.beggining||0));
+
+  const played = all.filter(x=>x.cls!=='pending');
+  const cnt = c => all.filter(x=>x.cls===c).length;
+  const nExact = cnt('exact'), nDir = cnt('dir'), nMiss = cnt('miss');
+  const pts = all.reduce((s,x)=>s+(num(x.g.gamepoints)||0),0);
+  const pct = n => played.length ? Math.round(n/played.length*100) : 0;
+
+  /* ---- stats cards ---- */
+  $('statGrid').innerHTML = `
+    <div class="stat"><div class="num">${played.length}</div><div class="lbl">משחקים ששוחקו ונוחשו</div></div>
+    <div class="stat exact"><div class="num">${nExact}</div><div class="pct">${pct(nExact)}%</div><div class="lbl">בול — תוצאה מדויקת</div></div>
+    <div class="stat dir"><div class="num">${nDir}</div><div class="pct">${pct(nDir)}%</div><div class="lbl">כיוון — מגמה נכונה</div></div>
+    <div class="stat miss"><div class="num">${nMiss}</div><div class="pct">${pct(nMiss)}%</div><div class="lbl">החטאות</div></div>
+    <div class="stat"><div class="num" style="color:var(--gold)">${fmtPts(pts)}</div><div class="lbl">נק׳ מניחושים${played.length?` · ממוצע ${(pts/played.length).toFixed(2)} למשחק`:''}</div></div>
+  `;
+
+  /* ratio bar */
+  $('ratioBar').innerHTML = played.length ? `
+    <div class="b-exact" style="width:${nExact/played.length*100}%"></div>
+    <div class="b-dir"   style="width:${nDir/played.length*100}%"></div>
+    <div class="b-miss"  style="width:${nMiss/played.length*100}%"></div>` : '';
+
+  /* form strip */
+  $('formStrip').innerHTML = all.map(x=>{
+    const t1=x.g.team1?.name||'?', t2=x.g.team2?.name||'?';
+    const g1=x.g.team1?.team1Guessed ?? '-', g2=x.g.team2?.team2Guessed ?? '-';
+    const guess = `${t1} ${g1} · ${t2} ${g2}`;
+    const real  = x.cls==='pending' ? 'טרם שוחק' : `${t1} ${x.g.result1} · ${t2} ${x.g.result2}`;
+    return `<span class="tick ${x.cls}" title="ניחוש: ${esc(guess)} | תוצאה: ${esc(real)} | ${BADGE_TXT[x.cls]}"></span>`;
+  }).join('');
+
+  /* ---- fixtures ---- */
+  $('fixturesList').innerHTML = fixtures.map((f,i)=>{
+    const games = (f.games||[]).slice().sort((a,b)=>(a.beggining||0)-(b.beggining||0));
+    const fpts = games.reduce((s,g)=>s+(num(g.gamepoints)||0),0);
+    const fe = games.filter(g=>classify(g)==='exact').length;
+    const fd = games.filter(g=>classify(g)==='dir').length;
+    const mini = games.map(g=>`<span class="tick ${classify(g)}"></span>`).join('');
+
+    const rows = games.map(g=>{
+      const cls = classify(g);
+      const g1 = g.team1?.team1Guessed, g2 = g.team2?.team2Guessed;
+      const t1 = g.team1?.name, t2 = g.team2?.name;
+      const f1 = flagHtml(t1,'fl');
+      const f2 = flagHtml(t2,'fl');
+      // each number sits beside its own flag: team1 on the right, team2 on the left (matches the teams column)
+      const pairCell = (a,b) => `<span class="side">${f1}<span class="n">${a}</span></span>`
+                              + `<span class="dash">·</span>`
+                              + `<span class="side"><span class="n">${b}</span>${f2}</span>`;
+      const guessTxt = (g1==null||g2==null) ? '—' : pairCell(g1, g2);
+      const realTxt = cls==='pending' ? 'טרם שוחק' : pairCell(g.result1, g.result2);
+      const p = num(g.gamepoints)||0;
+      return `<tr>
+        <td><div class="teams">
+          <span class="t right">${esc(t1)||''} ${flagHtml(t1)}</span>
+          <span class="vs">נגד</span>
+          <span class="t left">${flagHtml(t2)} ${esc(t2)||''}</span>
+        </div></td>
+        <td class="score guess">${guessTxt}</td>
+        <td class="score ${cls==='pending'?'pending':'real'}">${realTxt}</td>
+        <td style="text-align:center"><span class="badge ${cls}">${BADGE_TXT[cls]}</span></td>
+        <td class="gdate">${fmtDate(g.beggining)}</td>
+        <td class="pts ${p?'':'zero'}">${fmtPts(p)}</td>
+      </tr>`;
+    }).join('');
+
+    return `<details class="fixture" ${i===0?'open':''}>
+      <summary>
+        <span class="fix-title">${esc(f.name)}</span>
+        <span class="fix-meta">
+          <span class="fix-mini">${mini}</span>
+          <span>${fe} בול · ${fd} כיוון</span>
+          <span><b>${fmtPts(fpts)}</b> נק׳</span>
+        </span>
+      </summary>
+      <div class="table-scroll"><table>
+        <thead><tr>
+          <th>משחק</th><th>הניחוש</th><th>תוצאה</th><th style="text-align:center">דיוק</th><th>מועד</th><th style="text-align:center">נק׳</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </details>`;
+  }).join('');
+
+  $('playerCard').style.display = 'block';
+  $('statsSec').style.display = 'block';
+  $('fixturesSec').style.display = 'block';
+  $('playerCard').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>
