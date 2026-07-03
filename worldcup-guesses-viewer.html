@@ -246,8 +246,13 @@
   <!-- ============ VIEW: FRIENDS ============ -->
   <section class="view" id="view-friends" style="display:none">
     <div class="panel">
-      <h2>הליגה שלי</h2>
-      <p class="desc">כל חברי הליגה מתוך <span dir="ltr" style="font-family:var(--mono);font-size:12px">listofmemebers.js</span>, ממוינים לפי ניקוד. לחיצה על שחקן מושכת את הניחושים שלו מהשרת (getFriendGuesses) ומציגה דוח מלא.</p>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2 id="groupTitle">הליגה שלי</h2>
+          <p class="desc" id="groupDesc">רשימת החברים נטענת ישירות מהשרת (getGroup) — תמיד מעודכנת. לחיצה על שחקן מושכת את הניחושים שלו (getFriendGuesses) ומציגה דוח מלא.</p>
+        </div>
+        <button class="btn ghost sm" id="btnFriendsRefresh">↻ רענון</button>
+      </div>
       <div class="row" style="margin-top:0">
         <input class="field rtl" id="friendSearch" placeholder="חיפוש שחקן לפי שם…">
       </div>
@@ -337,6 +342,7 @@
 
 </div>
 
+<!-- גיבוי בלבד: אם ה-API של getGroup לא זמין, נשתמש ברשימה המקומית. מחיקת הקובץ לא שוברת את האפליקציה -->
 <script src="listofmemebers.js"></script>
 <script>
 /* ================= flags: Hebrew team name -> ISO code (flagcdn.com) ================= */
@@ -414,7 +420,7 @@ function showView(name){
   document.querySelectorAll('.view').forEach(v=>v.style.display='none');
   $('view-'+name).style.display='block';
   if(name==='top' && !topCache) loadTop();
-  if(name==='friends' && !friendsRendered) renderFriends();
+  if(name==='friends' && !members) loadFriends();
 }
 document.querySelectorAll('.mainnav button').forEach(b=>{
   b.onclick = () => { location.hash = b.dataset.view; showView(b.dataset.view); };
@@ -472,11 +478,35 @@ $('btnFetch').onclick = async () => {
 };
 
 /* ================= friends module ================= */
-const members = (typeof myMembers !== 'undefined' && Array.isArray(myMembers))
-  ? myMembers.slice().sort((a,b)=>(b.points||0)-(a.points||0))
-  : null;
-const memberIds = new Set((members||[]).map(m=>m._id));
-let friendsRendered = false;
+/* הרשימה נטענת חיה מהשרת (getGroup). listofmemebers.js משמש רק כגיבוי אם הרשת נופלת. */
+const GROUP_ID = '6a1411c5d11c790a310e9c82';
+let members = null, groupInfo = null, memberIds = new Set();
+let membersPromise = null;
+
+function ensureMembers(force){
+  if(!membersPromise || force){
+    membersPromise = (async () => {
+      try{
+        const res = await fetch('https://hevre.sport5.co.il/server/api/getGroup/' + GROUP_ID);
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const g = await res.json();
+        if(!g || !Array.isArray(g.members)) throw new Error('תשובה לא צפויה מהשרת');
+        groupInfo = g;
+        members = g.members.slice().sort((a,b)=>(b.points||0)-(a.points||0));
+      }catch(e){
+        if(typeof myMembers !== 'undefined' && Array.isArray(myMembers)){
+          groupInfo = {name:'הליגה שלי', _fallback:e.message};
+          members = myMembers.slice().sort((a,b)=>(b.points||0)-(a.points||0));
+        }else{
+          membersPromise = null;   // allow retry on next refresh
+          throw e;
+        }
+      }
+      memberIds = new Set(members.map(m=>m._id));
+    })();
+  }
+  return membersPromise;
+}
 
 function fidChipsHtml(m){
   const chips = [];
@@ -487,12 +517,29 @@ function fidChipsHtml(m){
   return `<div class="fidchips">${chips.join('')}</div>`;
 }
 
-function renderFriends(){
-  friendsRendered = true;
-  if(!members){
-    showError('friendsErr','הקובץ <span dir="ltr" style="font-family:var(--mono)">listofmemebers.js</span> לא נטען. ודא שהוא נמצא באותה תיקייה כמו קובץ ה-HTML ושהוא מגדיר משתנה בשם <span dir="ltr" style="font-family:var(--mono)">myMembers</span>.');
-    return;
+async function loadFriends(force){
+  hideError('friendsErr');
+  $('friendsLoading').textContent = 'טוען את רשימת החברים מהשרת…';
+  $('friendsLoading').style.display = 'block';
+  $('btnFriendsRefresh').disabled = true;
+  try{
+    await ensureMembers(force);
+    $('groupTitle').textContent = (groupInfo?.name || 'הליגה שלי') + ' · ' + members.length + ' שחקנים';
+    if(groupInfo?._fallback)
+      showError('friendsErr','המשיכה מהשרת נכשלה (<span dir="ltr" style="font-family:var(--mono);font-size:12px">'+esc(groupInfo._fallback)+'</span>) — מוצגת רשימת הגיבוי המקומית מ-listofmemebers.js, שעשויה להיות לא מעודכנת.');
+    renderFriends();
+  }catch(e){
+    showError('friendsErr','טעינת רשימת החברים נכשלה — <span dir="ltr" style="font-family:var(--mono);font-size:12px">'+esc(e.message)+'</span>');
+  }finally{
+    $('friendsLoading').style.display = 'none';
+    $('btnFriendsRefresh').disabled = false;
   }
+}
+
+$('btnFriendsRefresh').onclick = () => loadFriends(true);
+
+function renderFriends(){
+  if(!members) return;
   const q = ($('friendSearch').value||'').trim();
   const list = q ? members.filter(m=>(m.name||'').includes(q)) : members;
   $('friendsBody').innerHTML = list.map(m=>{
@@ -523,6 +570,7 @@ async function loadFriend(id){
   if(!m) return;
   const btn = document.querySelector(`#friendsBody button[data-load="${id}"]`);
   if(btn){ btn.disabled = true; btn.textContent = 'מושך…'; }
+  $('friendsLoading').textContent = 'מושך ניחושים מהשרת…';
   $('friendsLoading').style.display = 'block';
   try{
     const guesses = await api('getFriendGuesses', {user:id, auid:id});
@@ -547,7 +595,11 @@ async function loadTop(force){
   $('topLoading').style.display = 'block';
   $('btnTopRefresh').disabled = true;
   try{
-    const users = await api('getTopUsers', {});
+    // חברי הליגה נחוצים לתגית "מהליגה שלי" — טעינה במקביל, כישלון שלה לא מפיל את הדשבורד
+    const [users] = await Promise.all([
+      api('getTopUsers', {}),
+      ensureMembers().catch(()=>{})
+    ]);
     if(!Array.isArray(users)) throw new Error('תשובה לא צפויה מהשרת');
     topCache = users;
     renderTop(users);
