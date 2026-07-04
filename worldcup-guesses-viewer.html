@@ -137,6 +137,17 @@
   .champrow .cnum .pc{color:var(--muted);font-size:11px}
   .champrow:hover .cfill{filter:brightness(1.15)}
 
+  /* ---------- prediction ---------- */
+  .pred-note{color:var(--muted);font-size:12px;margin:2px 0 16px;line-height:1.7}
+  .stat .who{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+  .stat .who .avatar{width:28px;height:28px}
+  .score.pred .n{color:var(--gold);font-size:17px}
+  .pred-raw{display:block;color:var(--muted);font-size:11px;font-family:var(--mono);margin-top:3px}
+  .vote{font-family:var(--mono);font-weight:600;white-space:nowrap}
+  .vote.missing{color:var(--muted);font-weight:400}
+  /* מספר הבית (team1) תמיד מימין — כמו בעמודת המשחק — בלי תלות באלגוריתם ה-bidi */
+  .vote .n,.pred-raw .iso{unicode-bidi:isolate;direction:ltr}
+
   /* ---------- player card ---------- */
   .player{display:none;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:26px}
   .player-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
@@ -213,6 +224,7 @@
     <button data-view="single" class="active">🔍 שחקן בודד</button>
     <button data-view="friends">👥 הליגה שלי</button>
     <button data-view="top">🏆 דשבורד טופ 50</button>
+    <button data-view="predict">🔮 תחזית חכמה</button>
   </nav>
 
   <!-- ============ VIEW: SINGLE ============ -->
@@ -297,6 +309,27 @@
           <tbody id="topBody"></tbody>
         </table>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ VIEW: PREDICT ============ -->
+  <section class="view" id="view-predict" style="display:none">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2>🔮 תחזית חכמה</h2>
+          <p class="desc">ממוצע משוקלל של ניחושי שלושת המובילים בטבלה הארצית (getTopUsers) למשחקים שטרם שוחקו. מי שצבר יותר נקודות — מדייק יותר, ולכן מקבל משקל גבוה יותר בתחזית.</p>
+        </div>
+        <button class="btn ghost sm" id="btnPredictRefresh">↻ רענון</button>
+      </div>
+      <div class="error" id="predictErr"></div>
+      <div class="loading-note" id="predictLoading">מושך את ניחושי שלושת המובילים…</div>
+      <div class="stat-grid" id="predictStats" style="margin-top:14px"></div>
+      <p class="pred-note" id="predictNote" style="display:none">
+        משקל כל מוביל = חלקו היחסי בסך הנקודות של השלישייה. הציון המשוקלל לכל קבוצה מוצג מעוגל לתוצאה שלמה, ומתחתיו הממוצע המדויק.
+        אם מוביל לא ניחש משחק מסוים, המשקלים מנורמלים מחדש בין המנחשים שנותרו.
+      </p>
+      <div id="predictList"></div>
     </div>
   </section>
 
@@ -421,13 +454,14 @@ function showView(name){
   $('view-'+name).style.display='block';
   if(name==='top' && !topCache) loadTop();
   if(name==='friends' && !members) loadFriends();
+  if(name==='predict' && !predictCache) loadPredict();
 }
 document.querySelectorAll('.mainnav button').forEach(b=>{
   b.onclick = () => { location.hash = b.dataset.view; showView(b.dataset.view); };
 });
 window.addEventListener('DOMContentLoaded', ()=>{
   const h = location.hash.replace('#','');
-  if(h==='friends'||h==='top') showView(h);
+  if(h==='friends'||h==='top'||h==='predict') showView(h);
 });
 
 /* ================= tabs (single view) ================= */
@@ -680,6 +714,152 @@ async function loadTopUser(id){
     if(btn){ btn.disabled = false; btn.textContent = 'ניחושים'; }
     $('topLoading').style.display = 'none';
   }
+}
+
+/* ================= prediction module ================= */
+/* תחזית משוקללת: נשען על topCache של מודול המובילים ועל אותה קריאת appUserGetUserById —
+   מושך את מלוא הניחושים של שלושת הראשונים ומחשב ממוצע משוקלל-נקודות לכל משחק שטרם שוחק. */
+let predictCache = null;
+
+$('btnPredictRefresh').onclick = () => loadPredict(true);
+
+async function loadPredict(force){
+  hideError('predictErr');
+  if(predictCache && !force){ renderPredict(predictCache); return; }
+  $('predictLoading').style.display = 'block';
+  $('btnPredictRefresh').disabled = true;
+  try{
+    if(!Array.isArray(topCache) || force){
+      const users = await api('getTopUsers', {});
+      if(!Array.isArray(users)) throw new Error('תשובה לא צפויה מהשרת (getTopUsers)');
+      topCache = users;
+    }
+    const top3 = topCache.slice(0,3);
+    if(top3.length < 2) throw new Error('אין מספיק מובילים בטבלה לחישוב תחזית');
+    const details = await Promise.all(top3.map(u => api('appUserGetUserById', {auid:u.id})));
+    const totalPts = top3.reduce((s,u)=>s+(u.points||0),0) || 1;
+    const forecasters = top3.map((u,i)=>({
+      rank: i+1,
+      name: u.name || details[i]?.name || 'שחקן',
+      image: u.image,
+      points: u.points || 0,
+      weight: (u.points||0)/totalPts,
+      guesses: Array.isArray(details[i]?.guesses) ? details[i].guesses : []
+    }));
+    predictCache = forecasters;
+    renderPredict(forecasters);
+  }catch(e){
+    showError('predictErr','בניית התחזית נכשלה — <span dir="ltr" style="font-family:var(--mono);font-size:12px">'+esc(e.message)+'</span>');
+  }finally{
+    $('predictLoading').style.display = 'none';
+    $('btnPredictRefresh').disabled = false;
+  }
+}
+
+function renderPredict(forecasters){
+  /* --- איסוף כל המשחקים שטרם שוחקו, לפי gid, מניחושי שלושת המובילים --- */
+  const fixtures = new Map();   // fid -> {name, order, games: Map(gid -> {g, votes: Map(rank -> {g1,g2})})}
+  forecasters.forEach(f=>{
+    f.guesses.forEach(fx=>{
+      (fx.games||[]).forEach(g=>{
+        if(num(g.result1) !== null && num(g.result2) !== null) return;   // כבר שוחק — אין מה לחזות
+        const g1 = num(g.team1?.team1Guessed), g2 = num(g.team2?.team2Guessed);
+        if(g1 === null || g2 === null) return;                           // המוביל לא ניחש את המשחק
+        const fid = String(g.fid ?? fx.fid);
+        if(!fixtures.has(fid)) fixtures.set(fid, {name: fx.name, order: parseInt(fid,10)||0, games: new Map()});
+        const fxE = fixtures.get(fid);
+        if(!fxE.games.has(g.gid)) fxE.games.set(g.gid, {g, votes: new Map()});
+        fxE.games.get(g.gid).votes.set(f.rank, {g1, g2});
+      });
+    });
+  });
+
+  const allGames = [...fixtures.values()].reduce((s,fx)=>s+fx.games.size,0);
+
+  /* --- KPI: שלושת המנבאים ומשקלם + היקף התחזית --- */
+  const medal = r => r===1?'🥇':r===2?'🥈':'🥉';
+  $('predictStats').innerHTML = forecasters.map(f=>`
+    <div class="stat">
+      <div class="num small who">${avatarHtml(f.name, f.image)} ${medal(f.rank)} ${esc(f.name)}</div>
+      <div class="pct" style="color:var(--gold)">משקל ${(f.weight*100).toFixed(1)}%</div>
+      <div class="lbl">${fmtPts(f.points)} נק׳ · מקום ${f.rank} בטבלה</div>
+    </div>`).join('') + `
+    <div class="stat"><div class="num">${allGames}</div><div class="lbl">משחקים בתחזית</div></div>`;
+  $('predictNote').style.display = 'block';
+
+  if(!allGames){
+    $('predictList').innerHTML = '<p class="pred-note">לא נמצאו משחקים עתידיים עם ניחושים של המובילים — ייתכן שכל המשחקים כבר שוחקו.</p>';
+    return;
+  }
+
+  const CONS_TXT = {exact:'תמימות דעים', dir:'אותו כיוון', miss:'חלוקים', pending:'מנחש יחיד'};
+
+  /* --- דוח מפורט לפי מחזור --- */
+  const ordered = [...fixtures.values()].sort((a,b)=>a.order-b.order);
+  $('predictList').innerHTML = ordered.map((fx,i)=>{
+    const games = [...fx.games.values()].sort((a,b)=>(a.g.beggining||0)-(b.g.beggining||0));
+    let exactCnt = 0;
+
+    const rows = games.map(({g, votes})=>{
+      const vs = [...votes.values()];
+      /* משקל מנורמל בין מי שניחש בפועל את המשחק הזה */
+      const wsum = forecasters.reduce((s,f)=>s+(votes.has(f.rank)?f.weight:0),0) || 1;
+      const avg1 = forecasters.reduce((s,f)=>s+(votes.get(f.rank)?.g1 ?? 0)*f.weight,0)/wsum;
+      const avg2 = forecasters.reduce((s,f)=>s+(votes.get(f.rank)?.g2 ?? 0)*f.weight,0)/wsum;
+
+      /* מדד הסכמה: תוצאה זהה / אותו כיוון (1/X/2) / חילוקי דעות */
+      const sig = v => Math.sign(v.g1 - v.g2);
+      let cons;
+      if(vs.length === 1)                                        cons = 'pending';
+      else if(vs.every(v=>v.g1===vs[0].g1 && v.g2===vs[0].g2))   cons = 'exact';
+      else if(vs.every(v=>sig(v)===sig(vs[0])))                  cons = 'dir';
+      else                                                       cons = 'miss';
+      if(cons==='exact') exactCnt++;
+
+      const t1 = g.team1?.name, t2 = g.team2?.name;
+      const voteCells = forecasters.map(f=>{
+        const v = votes.get(f.rank);
+        if(!v) return `<td style="text-align:center"><span class="vote missing" title="${esc(f.name)} לא ניחש משחק זה">—</span></td>`;
+        return `<td style="text-align:center" title="${esc(f.name)} · משקל ${(f.weight/wsum*100).toFixed(0)}% במשחק זה">
+          <span class="vote"><span class="n">${v.g1}</span> · <span class="n">${v.g2}</span></span></td>`;
+      }).join('');
+
+      return `<tr>
+        <td><div class="teams">
+          <span class="t right">${esc(t1)||''} ${flagHtml(t1)}</span>
+          <span class="vs">נגד</span>
+          <span class="t left">${flagHtml(t2)} ${esc(t2)||''}</span>
+        </div></td>
+        ${voteCells}
+        <td class="gdate">${fmtDate(g.beggining)}</td>
+        <td class="score pred" style="text-align:center">
+          <span class="side">${flagHtml(t1,'fl')}<span class="n">${Math.round(avg1)}</span></span><span class="dash">·</span><span class="side"><span class="n">${Math.round(avg2)}</span>${flagHtml(t2,'fl')}</span>
+          <span class="pred-raw">ממוצע מדויק <span class="iso">${avg1.toFixed(2)}</span> · <span class="iso">${avg2.toFixed(2)}</span></span>
+        </td>
+        <td style="text-align:center"><span class="badge ${cons}">${CONS_TXT[cons]}</span></td>
+      </tr>`;
+    }).join('');
+
+    return `<details class="fixture" ${i===0?'open':''}>
+      <summary>
+        <span class="fix-title">${esc(fx.name)}</span>
+        <span class="fix-meta">
+          <span>${games.length} משחקים</span>
+          <span><b>${exactCnt}</b> תמימות דעים</span>
+        </span>
+      </summary>
+      <div class="table-scroll"><table>
+        <thead><tr>
+          <th>משחק</th>
+          ${forecasters.map(f=>`<th style="text-align:center">${medal(f.rank)} ${esc(f.name)}</th>`).join('')}
+          <th>מועד</th>
+          <th style="text-align:center">תחזית משוקללת</th>
+          <th style="text-align:center">הסכמה</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </details>`;
+  }).join('');
 }
 
 /* ================= render (shared player report) ================= */
