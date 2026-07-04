@@ -1,0 +1,38 @@
+{
+    "name": "דוח ניחושים — מונדיאל 2026",
+    "short_name": "מונדיאל 2026",
+    "description": "ניתוח פגיעות, כיוונים והחטאות בליגת הניחושים של מונדיאל 2026",
+    "start_url": "./worldcup-guesses-viewer.html",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#0A2A20",
+    "theme_color": "#0A2A20",
+    "lang": "he",
+    "dir": "rtl",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ],
+    "categories": [
+        "sports",
+        "entertainment"
+    ],
+    "screenshots": []
+}

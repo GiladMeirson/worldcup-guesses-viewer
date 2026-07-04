@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#0A2A20"/>
+  <!-- Grass stripes -->
+  <rect x="0" y="0" width="512" height="512" rx="80" fill="url(#stripes)" opacity="0.15"/>
+  <defs>
+    <pattern id="stripes" patternUnits="userSpaceOnUse" width="80" height="80">
+      <rect width="40" height="80" fill="#0E362A"/>
+    </pattern>
+  </defs>
+  <!-- Trophy cup -->
+  <g transform="translate(256,256)">
+    <!-- Cup body -->
+    <path d="M-70,-100 Q-80,-40 -50,20 Q-30,60 0,70 Q30,60 50,20 Q80,-40 70,-100 Z" fill="#F0C24B"/>
+    <!-- Cup base stem -->
+    <rect x="-12" y="70" width="24" height="40" fill="#F0C24B"/>
+    <!-- Cup base -->
+    <rect x="-45" y="110" width="90" height="18" rx="8" fill="#F0C24B"/>
+    <!-- Cup handles -->
+    <path d="M-70,-60 Q-110,-60 -110,-20 Q-110,10 -70,10" fill="none" stroke="#F0C24B" stroke-width="14" stroke-linecap="round"/>
+    <path d="M70,-60 Q110,-60 110,-20 Q110,10 70,10" fill="none" stroke="#F0C24B" stroke-width="14" stroke-linecap="round"/>
+    <!-- Star above cup -->
+    <polygon points="0,-130 8,-110 28,-110 13,-97 19,-77 0,-89 -19,-77 -13,-97 -28,-110 -8,-110" fill="#6FD095"/>
+  </g>
+</svg>

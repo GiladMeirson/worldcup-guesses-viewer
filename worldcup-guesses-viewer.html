@@ -1,13 +1,26 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>דוח ניחושים — מונדיאל 2026</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Heebo:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-<style>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דוח ניחושים — מונדיאל 2026</title>
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0A2A20">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="מונדיאל 2026">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Secular+One&family=Heebo:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet">
+    <style>
   :root{
     --pitch:#0A2A20;
     --pitch-2:#0E362A;
@@ -209,175 +222,206 @@
     *{transition:none!important}
   }
 </style>
-</head>
-<body>
-<div class="wrap">
+  </head>
+  <body>
+    <div class="wrap">
 
-  <header class="masthead">
-    <h1>דוח ניחושים · מונדיאל 2026</h1>
-    <span class="sub">ניתוח פגיעות, כיוונים והחטאות בליגת הניחושים</span>
-  </header>
-  <div class="rule"></div>
+      <header class="masthead">
+        <h1>דוח ניחושים · מונדיאל 2026</h1>
+        <span class="sub">ניתוח פגיעות, כיוונים והחטאות בליגת הניחושים</span>
+      </header>
+      <div class="rule"></div>
 
-  <!-- ============ MAIN NAV ============ -->
-  <nav class="mainnav" role="tablist" aria-label="מודולים">
-    <button data-view="single" class="active">🔍 שחקן בודד</button>
-    <button data-view="friends">👥 הליגה שלי</button>
-    <button data-view="top">🏆 דשבורד טופ 50</button>
-    <button data-view="predict">🔮 תחזית חכמה</button>
-  </nav>
+      <!-- ============ MAIN NAV ============ -->
+      <nav class="mainnav" role="tablist" aria-label="מודולים">
+        <button data-view="single" class="active">🔍 שחקן בודד</button>
+        <button data-view="friends">👥 הליגה שלי</button>
+        <button data-view="top">🏆 דשבורד טופ 50</button>
+        <button data-view="predict">🔮 תחזית חכמה</button>
+      </nav>
 
-  <!-- ============ VIEW: SINGLE ============ -->
-  <section class="panel view" id="view-single">
-    <div class="tabs" role="tablist">
-      <button class="tab active" id="tabJson" role="tab" aria-selected="true">הדבקת JSON</button>
-      <button class="tab" id="tabApi" role="tab" aria-selected="false">משיכה לפי auid</button>
-    </div>
-
-    <div id="paneJson">
-      <textarea id="jsonInput" placeholder='הדבק כאן את ה-JSON המלא של המשתמש…' spellcheck="false"></textarea>
-      <div class="row">
-        <button class="btn" id="btnParse">נתח נתונים</button>
-      </div>
-    </div>
-
-    <div id="paneApi" style="display:none">
-      <div class="row" style="margin-top:0">
-        <input class="field" id="auidInput" placeholder="auid — לדוגמה: 6a157d4630cb12a8d60ec895">
-        <button class="btn" id="btnFetch">משוך מהשרת</button>
-      </div>
-      <p class="hint">
-        הבקשה נשלחת ב-POST אל
-        <span dir="ltr" style="font-family:var(--mono);font-size:12px">hevre.sport5.co.il/server/data.php?type=appUserGetUserById</span>.
-      </p>
-    </div>
-
-    <div class="error" id="errBox"></div>
-  </section>
-
-  <!-- ============ VIEW: FRIENDS ============ -->
-  <section class="view" id="view-friends" style="display:none">
-    <div class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-        <div>
-          <h2 id="groupTitle">הליגה שלי</h2>
-          <p class="desc" id="groupDesc">רשימת החברים נטענת ישירות מהשרת (getGroup) — תמיד מעודכנת. לחיצה על שחקן מושכת את הניחושים שלו (getFriendGuesses) ומציגה דוח מלא.</p>
+      <!-- ============ VIEW: SINGLE ============ -->
+      <section class="panel view" id="view-single">
+        <div class="tabs" role="tablist">
+          <button class="tab active" id="tabJson" role="tab"
+            aria-selected="true">הדבקת JSON</button>
+          <button class="tab" id="tabApi" role="tab" aria-selected="false">משיכה
+            לפי auid</button>
         </div>
-        <button class="btn ghost sm" id="btnFriendsRefresh">↻ רענון</button>
-      </div>
-      <div class="row" style="margin-top:0">
-        <input class="field rtl" id="friendSearch" placeholder="חיפוש שחקן לפי שם…">
-      </div>
-      <div class="error" id="friendsErr"></div>
-      <div class="loading-note" id="friendsLoading">מושך ניחושים מהשרת…</div>
-      <div class="table-scroll" style="margin-top:14px">
-        <table id="friendsTable">
-          <thead><tr>
-            <th style="text-align:center">#</th><th>שחקן</th><th>נק׳</th><th>נק׳ לפי מחזור</th><th>אלופה</th><th>מלך שערים</th><th></th>
-          </tr></thead>
-          <tbody id="friendsBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
 
-  <!-- ============ VIEW: TOP USERS ============ -->
-  <section class="view" id="view-top" style="display:none">
-    <div class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-        <div>
-          <h2>דשבורד המובילים</h2>
-          <p class="desc">הטבלה הארצית — החזקים ביותר במשחק (getTopUsers). לחיצה על שחקן מושכת את כל הניחושים שלו (appUserGetUserById) ומציגה דוח מלא.</p>
+        <div id="paneJson">
+          <textarea id="jsonInput"
+            placeholder='הדבק כאן את ה-JSON המלא של המשתמש…'
+            spellcheck="false"></textarea>
+          <div class="row">
+            <button class="btn" id="btnParse">נתח נתונים</button>
+          </div>
         </div>
-        <button class="btn ghost sm" id="btnTopRefresh">↻ רענון</button>
-      </div>
-      <div class="error" id="topErr"></div>
-      <div class="loading-note" id="topLoading">טוען את טבלת המובילים…</div>
 
-      <div class="stat-grid" id="topStats" style="margin-top:14px"></div>
-
-      <div class="formstrip-card champbars" id="champBarsCard" style="display:none">
-        <div class="k">ניחוש האלופה בקרב המובילים — התפלגות</div>
-        <div id="champBars"></div>
-      </div>
-
-      <div class="table-scroll">
-        <table id="topTable">
-          <thead><tr>
-            <th style="text-align:center">#</th><th>שחקן</th><th>נק׳</th><th>אלופה</th><th>נק׳ מלך שערים</th><th></th>
-          </tr></thead>
-          <tbody id="topBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ VIEW: PREDICT ============ -->
-  <section class="view" id="view-predict" style="display:none">
-    <div class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-        <div>
-          <h2>🔮 תחזית חכמה</h2>
-          <p class="desc">ממוצע משוקלל של ניחושי שלושת המובילים בטבלה הארצית (getTopUsers) למשחקים שטרם שוחקו. מי שצבר יותר נקודות — מדייק יותר, ולכן מקבל משקל גבוה יותר בתחזית.</p>
+        <div id="paneApi" style="display:none">
+          <div class="row" style="margin-top:0">
+            <input class="field" id="auidInput"
+              placeholder="auid — לדוגמה: 6a157d4630cb12a8d60ec895">
+            <button class="btn" id="btnFetch">משוך מהשרת</button>
+          </div>
+          <p class="hint">
+            הבקשה נשלחת ב-POST אל
+            <span dir="ltr"
+              style="font-family:var(--mono);font-size:12px">hevre.sport5.co.il/server/data.php?type=appUserGetUserById</span>.
+          </p>
         </div>
-        <button class="btn ghost sm" id="btnPredictRefresh">↻ רענון</button>
-      </div>
-      <div class="error" id="predictErr"></div>
-      <div class="loading-note" id="predictLoading">מושך את ניחושי שלושת המובילים…</div>
-      <div class="stat-grid" id="predictStats" style="margin-top:14px"></div>
-      <p class="pred-note" id="predictNote" style="display:none">
-        משקל כל מוביל = חלקו היחסי בסך הנקודות של השלישייה. הציון המשוקלל לכל קבוצה מוצג מעוגל לתוצאה שלמה, ומתחתיו הממוצע המדויק.
-        אם מוביל לא ניחש משחק מסוים, המשקלים מנורמלים מחדש בין המנחשים שנותרו.
-      </p>
-      <div id="predictList"></div>
+
+        <div class="error" id="errBox"></div>
+      </section>
+
+      <!-- ============ VIEW: FRIENDS ============ -->
+      <section class="view" id="view-friends" style="display:none">
+        <div class="panel">
+          <div
+            style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            <div>
+              <h2 id="groupTitle">הליגה שלי</h2>
+              <p class="desc" id="groupDesc">רשימת החברים נטענת ישירות מהשרת
+                (getGroup) — תמיד מעודכנת. לחיצה על שחקן מושכת את הניחושים שלו
+                (getFriendGuesses) ומציגה דוח מלא.</p>
+            </div>
+            <button class="btn ghost sm" id="btnFriendsRefresh">↻ רענון</button>
+          </div>
+          <div class="row" style="margin-top:0">
+            <input class="field rtl" id="friendSearch"
+              placeholder="חיפוש שחקן לפי שם…">
+          </div>
+          <div class="error" id="friendsErr"></div>
+          <div class="loading-note" id="friendsLoading">מושך ניחושים
+            מהשרת…</div>
+          <div class="table-scroll" style="margin-top:14px">
+            <table id="friendsTable">
+              <thead><tr>
+                  <th
+                    style="text-align:center">#</th><th>שחקן</th><th>נק׳</th><th>נק׳
+                    לפי מחזור</th><th>אלופה</th><th>מלך שערים</th><th></th>
+                </tr></thead>
+              <tbody id="friendsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: TOP USERS ============ -->
+      <section class="view" id="view-top" style="display:none">
+        <div class="panel">
+          <div
+            style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            <div>
+              <h2>דשבורד המובילים</h2>
+              <p class="desc">הטבלה הארצית — החזקים ביותר במשחק (getTopUsers).
+                לחיצה על שחקן מושכת את כל הניחושים שלו (appUserGetUserById)
+                ומציגה דוח מלא.</p>
+            </div>
+            <button class="btn ghost sm" id="btnTopRefresh">↻ רענון</button>
+          </div>
+          <div class="error" id="topErr"></div>
+          <div class="loading-note" id="topLoading">טוען את טבלת המובילים…</div>
+
+          <div class="stat-grid" id="topStats" style="margin-top:14px"></div>
+
+          <div class="formstrip-card champbars" id="champBarsCard"
+            style="display:none">
+            <div class="k">ניחוש האלופה בקרב המובילים — התפלגות</div>
+            <div id="champBars"></div>
+          </div>
+
+          <div class="table-scroll">
+            <table id="topTable">
+              <thead><tr>
+                  <th
+                    style="text-align:center">#</th><th>שחקן</th><th>נק׳</th><th>אלופה</th><th>נק׳
+                    מלך שערים</th><th></th>
+                </tr></thead>
+              <tbody id="topBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: PREDICT ============ -->
+      <section class="view" id="view-predict" style="display:none">
+        <div class="panel">
+          <div
+            style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            <div>
+              <h2>🔮 תחזית חכמה</h2>
+              <p class="desc">ממוצע משוקלל של ניחושי שלושת המובילים בטבלה הארצית
+                (getTopUsers) למשחקים שטרם שוחקו. מי שצבר יותר נקודות — מדייק
+                יותר, ולכן מקבל משקל גבוה יותר בתחזית.</p>
+            </div>
+            <button class="btn ghost sm" id="btnPredictRefresh">↻ רענון</button>
+          </div>
+          <div class="error" id="predictErr"></div>
+          <div class="loading-note" id="predictLoading">מושך את ניחושי שלושת
+            המובילים…</div>
+          <div class="stat-grid" id="predictStats"
+            style="margin-top:14px"></div>
+          <p class="pred-note" id="predictNote" style="display:none">
+            משקל כל מוביל = חלקו היחסי בסך הנקודות של השלישייה. הציון המשוקלל
+            לכל קבוצה מוצג מעוגל לתוצאה שלמה, ומתחתיו הממוצע המדויק.
+            אם מוביל לא ניחש משחק מסוים, המשקלים מנורמלים מחדש בין המנחשים
+            שנותרו.
+          </p>
+          <div id="predictList"></div>
+        </div>
+      </section>
+
+      <!-- ============ PLAYER META (shared output) ============ -->
+      <section class="player" id="playerCard">
+        <div class="player-top">
+          <div>
+            <div class="player-name" id="pName"></div>
+            <span class="player-id" id="pId"></span>
+            <div class="player-src" id="pSrc"></div>
+          </div>
+          <div class="total-points">
+            <div class="num" id="pPoints"></div>
+            <div class="lbl">סה״כ נקודות</div>
+          </div>
+        </div>
+        <div class="meta-grid" id="metaGrid"></div>
+        <div class="fixchips" id="fixChips"></div>
+      </section>
+
+      <!-- ============ STATS ============ -->
+      <section class="stats" id="statsSec">
+        <h2>סטטיסטיקת דיוק</h2>
+        <div class="stat-grid" id="statGrid"></div>
+        <div class="bar" id="ratioBar" title="יחס בול / כיוון / החטאה"></div>
+        <div class="formstrip-card">
+          <div class="k">פס פגיעות — כל משחק לפי סדר כרונולוגי (מימין
+            לשמאל)</div>
+          <div class="formstrip" id="formStrip"></div>
+          <div class="legend">
+            <span><i class="dot" style="background:var(--gold)"></i> בול (תוצאה
+              מדויקת)</span>
+            <span><i class="dot" style="background:var(--grass)"></i> כיוון
+              (מגמה נכונה)</span>
+            <span><i class="dot" style="background:var(--miss)"></i>
+              החטאה</span>
+            <span><i class="dot" style="background:var(--pending)"></i> טרם שוחק
+              / לא נוחש</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FIXTURES ============ -->
+      <section class="fixtures" id="fixturesSec">
+        <h2>ניחושים לפי מחזור</h2>
+        <div id="fixturesList"></div>
+      </section>
+
     </div>
-  </section>
 
-  <!-- ============ PLAYER META (shared output) ============ -->
-  <section class="player" id="playerCard">
-    <div class="player-top">
-      <div>
-        <div class="player-name" id="pName"></div>
-        <span class="player-id" id="pId"></span>
-        <div class="player-src" id="pSrc"></div>
-      </div>
-      <div class="total-points">
-        <div class="num" id="pPoints"></div>
-        <div class="lbl">סה״כ נקודות</div>
-      </div>
-    </div>
-    <div class="meta-grid" id="metaGrid"></div>
-    <div class="fixchips" id="fixChips"></div>
-  </section>
-
-  <!-- ============ STATS ============ -->
-  <section class="stats" id="statsSec">
-    <h2>סטטיסטיקת דיוק</h2>
-    <div class="stat-grid" id="statGrid"></div>
-    <div class="bar" id="ratioBar" title="יחס בול / כיוון / החטאה"></div>
-    <div class="formstrip-card">
-      <div class="k">פס פגיעות — כל משחק לפי סדר כרונולוגי (מימין לשמאל)</div>
-      <div class="formstrip" id="formStrip"></div>
-      <div class="legend">
-        <span><i class="dot" style="background:var(--gold)"></i> בול (תוצאה מדויקת)</span>
-        <span><i class="dot" style="background:var(--grass)"></i> כיוון (מגמה נכונה)</span>
-        <span><i class="dot" style="background:var(--miss)"></i> החטאה</span>
-        <span><i class="dot" style="background:var(--pending)"></i> טרם שוחק / לא נוחש</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ FIXTURES ============ -->
-  <section class="fixtures" id="fixturesSec">
-    <h2>ניחושים לפי מחזור</h2>
-    <div id="fixturesList"></div>
-  </section>
-
-</div>
-
-<!-- גיבוי בלבד: אם ה-API של getGroup לא זמין, נשתמש ברשימה המקומית. מחיקת הקובץ לא שוברת את האפליקציה -->
-<script src="listofmemebers.js"></script>
-<script>
+    <!-- גיבוי בלבד: אם ה-API של getGroup לא זמין, נשתמש ברשימה המקומית. מחיקת הקובץ לא שוברת את האפליקציה -->
+    <script src="listofmemebers.js"></script>
+    <script>
 /* ================= flags: Hebrew team name -> ISO code (flagcdn.com) ================= */
 const FLAG_MAP = {
   'מקסיקו':'mx','דרום אפריקה':'za','דרום קוריאה':'kr',"צ'כיה":'cz','קנדה':'ca',
@@ -986,5 +1030,15 @@ function render(data, sourceLabel){
   $('playerCard').scrollIntoView({behavior:'smooth'});
 }
 </script>
-</body>
+
+    <!-- PWA: Service Worker registration -->
+    <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+</script>
+  </body>
 </html>
